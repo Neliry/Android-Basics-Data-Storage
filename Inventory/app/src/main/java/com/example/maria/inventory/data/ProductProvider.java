@@ -13,25 +13,27 @@ import com.example.maria.inventory.data.ProductContract.ProductEntry;
 
 public class ProductProvider extends ContentProvider {
 
-    /** Tag for the log messages */
+    /**
+     * Tag for the log messages
+     */
     public static final String LOG_TAG = ProductProvider.class.getSimpleName();
 
     private ProductDbHelper mDbHelper;
     public static final String PATH_PRODUCTS = "products";
-    private static final int PRODUCTS =100;
-    private static final int PRODUCTS_ID=101;
+    private static final int PRODUCTS = 100;
+    private static final int PRODUCTS_ID = 101;
 
-    private static final UriMatcher sUriMatcher= new UriMatcher(UriMatcher.NO_MATCH);
+    private static final UriMatcher sUriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
 
     static {
         sUriMatcher.addURI(ProductContract.CONTENT_AUTHORITY, ProductContract.PATH_PRODUCTS, PRODUCTS);
-        sUriMatcher.addURI(ProductContract.CONTENT_AUTHORITY, ProductContract.PATH_PRODUCTS +"/#", PRODUCTS_ID);
+        sUriMatcher.addURI(ProductContract.CONTENT_AUTHORITY, ProductContract.PATH_PRODUCTS + "/#", PRODUCTS_ID);
     }
 
 
     @Override
     public boolean onCreate() {
-        mDbHelper=new ProductDbHelper(getContext());
+        mDbHelper = new ProductDbHelper(getContext());
         return true;
     }
 
@@ -40,23 +42,22 @@ public class ProductProvider extends ContentProvider {
     public Cursor query(Uri uri, String[] projection, String selection, String[] selectionArgs,
                         String sortOrder) {
 
-        SQLiteDatabase database=mDbHelper.getReadableDatabase();
+        SQLiteDatabase database = mDbHelper.getReadableDatabase();
 
         Cursor cursor;
 
-        int match=sUriMatcher.match(uri);
-        switch (match)
-        {
+        int match = sUriMatcher.match(uri);
+        switch (match) {
             case PRODUCTS:
-                cursor=database.query(ProductContract.ProductEntry.TABLE_NAME, projection, selection, selectionArgs, null, null, sortOrder);
+                cursor = database.query(ProductContract.ProductEntry.TABLE_NAME, projection, selection, selectionArgs, null, null, sortOrder);
                 break;
             case PRODUCTS_ID:
-                selection=ProductContract.ProductEntry._ID+"=?";
-                selectionArgs=new String[]{String.valueOf(ContentUris.parseId(uri))};
-                cursor=database.query(ProductContract.ProductEntry.TABLE_NAME, projection, selection, selectionArgs, null, null, sortOrder);
+                selection = ProductContract.ProductEntry._ID + "=?";
+                selectionArgs = new String[]{String.valueOf(ContentUris.parseId(uri))};
+                cursor = database.query(ProductContract.ProductEntry.TABLE_NAME, projection, selection, selectionArgs, null, null, sortOrder);
                 break;
             default:
-                throw new IllegalArgumentException("Cannot query unknown URI "+uri);
+                throw new IllegalArgumentException("Cannot query unknown URI " + uri);
 
         }
         cursor.setNotificationUri(getContext().getContentResolver(), uri);
@@ -79,16 +80,16 @@ public class ProductProvider extends ContentProvider {
 
         String name = contentValues.getAsString(ProductEntry.COLUMN_PRODUCT_NAME);
         if (name == null || name.equals("")) {
-                return null;
+            return null;
         }
 
         Integer price = contentValues.getAsInteger(ProductEntry.COLUMN_PRODUCT_PRICE);
-        if (price == null || price<0) {
+        if (price == null || price < 0) {
             return null;
         }
 
         Integer quantity = contentValues.getAsInteger(ProductEntry.COLUMN_QUANTITY_AVAILABLE);
-        if (quantity != null && quantity < 0) {
+        if (quantity == null || quantity < 0) {
             contentValues.put(ProductEntry.COLUMN_QUANTITY_AVAILABLE, 0);
             return null;
         }
@@ -116,11 +117,11 @@ public class ProductProvider extends ContentProvider {
             case PRODUCTS:
                 return updateProduct(uri, contentValues, selection, selectionArgs);
             case PRODUCTS_ID:
-                // For the PET_ID code, extract out the ID from the URI,
+                // For the PRODUCT_ID code, extract out the ID from the URI,
                 // so we know which row to update. Selection will be "_id=?" and selection
                 // arguments will be a String array containing the actual ID.
                 selection = ProductEntry._ID + "=?";
-                selectionArgs = new String[] { String.valueOf(ContentUris.parseId(uri)) };
+                selectionArgs = new String[]{String.valueOf(ContentUris.parseId(uri))};
                 return updateProduct(uri, contentValues, selection, selectionArgs);
             default:
                 throw new IllegalArgumentException("Update is not supported for " + uri);
@@ -137,14 +138,14 @@ public class ProductProvider extends ContentProvider {
 
         if (contentValues.containsKey(ProductEntry.COLUMN_PRODUCT_PRICE)) {
             Integer price = contentValues.getAsInteger(ProductEntry.COLUMN_PRODUCT_PRICE);
-            if (price == null || price< 0) {
+            if (price == null || price < 0) {
                 return 0;
             }
         }
 
         if (contentValues.containsKey(ProductEntry.COLUMN_QUANTITY_AVAILABLE)) {
             Integer quantity = contentValues.getAsInteger(ProductEntry.COLUMN_QUANTITY_AVAILABLE);
-            if (quantity != null && quantity < 0) {
+            if (quantity == null || quantity < 0) {
                 return 0;
             }
         }
@@ -187,7 +188,7 @@ public class ProductProvider extends ContentProvider {
             case PRODUCTS_ID:
                 // Delete a single row given by the ID in the URI
                 selection = ProductEntry._ID + "=?";
-                selectionArgs = new String[] { String.valueOf(ContentUris.parseId(uri)) };
+                selectionArgs = new String[]{String.valueOf(ContentUris.parseId(uri))};
                 rowsDeleted = database.delete(ProductEntry.TABLE_NAME, selection, selectionArgs);
                 break;
             default:

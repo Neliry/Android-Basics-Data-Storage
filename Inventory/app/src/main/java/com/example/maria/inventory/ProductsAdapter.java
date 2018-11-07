@@ -13,7 +13,6 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.CursorAdapter;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.example.maria.inventory.data.ProductContract;
@@ -47,45 +46,51 @@ public class ProductsAdapter extends CursorAdapter {
         int imageColumnIndex = cursor.getColumnIndex(ProductContract.ProductEntry.COLUMN_PRODUCT_PICTURE);
         int idIndex = cursor.getColumnIndex(ProductContract.ProductEntry._ID);
 
-        String productName=cursor.getString(nameColumnIndex);
-        int productPrice=cursor.getInt(priceColumnIndex);
-        final String productQuantity=cursor.getString(quantityColumnIndex);
-        String productSupplier=cursor.getString(supplierColumnIndex);
-        String productImage=cursor.getString(imageColumnIndex);
+        String productName = cursor.getString(nameColumnIndex);
+        int productPrice = cursor.getInt(priceColumnIndex);
+        final String productQuantity = cursor.getString(quantityColumnIndex);
+        String productSupplier = cursor.getString(supplierColumnIndex);
+        String productImage = cursor.getString(imageColumnIndex);
         final int id = cursor.getInt(idIndex);
 
-        product_image.setImageBitmap(StringToBitMap(productImage));
+        Bitmap imageBitmap = StringToBitMap(productImage);
+        if (imageBitmap == null) {
+            product_image.setVisibility(View.GONE);
+        } else {
+            product_image.setVisibility(View.VISIBLE);
+            product_image.setImageBitmap(imageBitmap);
+        }
 
         nameView.setText(productName);
-        priceView.setText("Price: "+NumberFormat.getCurrencyInstance(Locale.getDefault()).format(productPrice));
-        quantityView.setText("Quantity: "+String.valueOf(productQuantity));
-        supplierView.setText("Supplier: "+productSupplier);
+        priceView.setText("Price: " + NumberFormat.getCurrencyInstance(Locale.getDefault()).format(productPrice));
+        quantityView.setText("Quantity: " + String.valueOf(productQuantity));
+        supplierView.setText("Supplier: " + productSupplier);
 
-        final Button saleButton= (Button) view.findViewById(R.id.sale_button);
+        final Button saleButton = (Button) view.findViewById(R.id.sale_button);
 
         saleButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                int quantity=Integer.parseInt(productQuantity);
-                if(quantity>0) {
-                    quantityView.setText("Quantity: "+String.valueOf(quantity-1));
+                int quantity = Integer.parseInt(productQuantity);
+                if (quantity > 0) {
+                    quantityView.setText("Quantity: " + String.valueOf(quantity - 1));
                     String selection = ProductContract.ProductEntry._ID + "= ?";
                     String[] selectionArgs = {Integer.toString(id)};
                     Uri updateURI = Uri.withAppendedPath(ProductContract.ProductEntry.CONTENT_URI, Integer.toString(id));
                     ContentValues values = new ContentValues();
-                    values.put(ProductContract.ProductEntry.COLUMN_QUANTITY_AVAILABLE, quantity-1);
+                    values.put(ProductContract.ProductEntry.COLUMN_QUANTITY_AVAILABLE, quantity - 1);
                     int count = context.getContentResolver().update(updateURI, values, selection, selectionArgs);
                 }
             }
         });
     }
 
-    public Bitmap StringToBitMap(String encodedString){
+    public Bitmap StringToBitMap(String encodedString) {
         try {
-            byte [] encodeByte=Base64.decode(encodedString,Base64.DEFAULT);
-            Bitmap bitmap=BitmapFactory.decodeByteArray(encodeByte, 0, encodeByte.length);
+            byte[] encodeByte = Base64.decode(encodedString, Base64.DEFAULT);
+            Bitmap bitmap = BitmapFactory.decodeByteArray(encodeByte, 0, encodeByte.length);
             return bitmap;
-        } catch(Exception e) {
+        } catch (Exception e) {
             e.getMessage();
             return null;
         }

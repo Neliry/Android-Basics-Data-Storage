@@ -55,5 +55,11 @@
 
     <string name="cancel">Cancel</string>
 
+    <string name="empty_product_name">Empty product name field</string>
+
+    <string name="empty_product_price">Empty product price field</string>
+
+    <string name="empty_product_supplier">Empty product supplier field</string>
+
     <string name="order_summary_email_subject">Product order for </string>
 </resources>

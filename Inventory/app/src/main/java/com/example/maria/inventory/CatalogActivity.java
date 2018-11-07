@@ -8,24 +8,21 @@ import android.content.Intent;
 import android.content.Loader;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.Button;
-import android.widget.LinearLayout;
 import android.widget.ListView;
-import android.widget.TextView;
 
 import com.example.maria.inventory.data.ProductContract.ProductEntry;
 
-public class CatalogActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor>{
+public class CatalogActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor> {
 
-    private static final int PRODUCT_LOADER =0;
+    private static final int PRODUCT_LOADER = 0;
     private static Context context;
     ProductsAdapter mCursorAdapter;
 
@@ -34,7 +31,7 @@ public class CatalogActivity extends AppCompatActivity implements LoaderManager.
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_catalog);
 
-        context=CatalogActivity.this;
+        context = CatalogActivity.this;
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.floatingActionButton);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -45,7 +42,7 @@ public class CatalogActivity extends AppCompatActivity implements LoaderManager.
             }
         });
 
-        ListView productListView=(ListView)findViewById(R.id.list);
+        ListView productListView = (ListView) findViewById(R.id.list);
 
         View emptyView = findViewById(R.id.empty_view);
         productListView.setEmptyView(emptyView);
@@ -54,8 +51,8 @@ public class CatalogActivity extends AppCompatActivity implements LoaderManager.
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
                 Intent intent = new Intent(CatalogActivity.this, EditorActivity.class);
-                Uri currentPetUri= ContentUris.withAppendedId(ProductEntry.CONTENT_URI, l);
-                intent.setData(currentPetUri);
+                Uri currentProductUri = ContentUris.withAppendedId(ProductEntry.CONTENT_URI, l);
+                intent.setData(currentProductUri);
                 startActivity(intent);
             }
         });
@@ -63,7 +60,7 @@ public class CatalogActivity extends AppCompatActivity implements LoaderManager.
         mCursorAdapter = new ProductsAdapter(this, null);
         productListView.setAdapter(mCursorAdapter);
 
-        getLoaderManager().initLoader(PRODUCT_LOADER,null, this);
+        getLoaderManager().initLoader(PRODUCT_LOADER, null, this);
 
     }
 
@@ -82,7 +79,7 @@ public class CatalogActivity extends AppCompatActivity implements LoaderManager.
 
             // Respond to a click on the "Delete all entries" menu option
             case R.id.action_delete_all_entries:
-                deleteAllPets();
+                deleteAllProducts();
                 return true;
         }
         return super.onOptionsItemSelected(item);
@@ -91,7 +88,7 @@ public class CatalogActivity extends AppCompatActivity implements LoaderManager.
 
     @Override
     public Loader<Cursor> onCreateLoader(int i, Bundle bundle) {
-        String[] projection= {
+        String[] projection = {
                 ProductEntry._ID,
                 ProductEntry.COLUMN_PRODUCT_NAME,
                 ProductEntry.COLUMN_PRODUCT_PRICE,
@@ -102,7 +99,7 @@ public class CatalogActivity extends AppCompatActivity implements LoaderManager.
 
 
         return new CursorLoader(this,
-                ProductEntry.CONTENT_URI ,
+                ProductEntry.CONTENT_URI,
                 projection,
                 null,
                 null,
@@ -120,12 +117,12 @@ public class CatalogActivity extends AppCompatActivity implements LoaderManager.
         mCursorAdapter.swapCursor(null);
     }
 
-    private void deleteAllPets() {
+    private void deleteAllProducts() {
         int rowsDeleted = getContentResolver().delete(ProductEntry.CONTENT_URI, null, null);
-        Log.v("CatalogActivity", rowsDeleted + " rows deleted from pet database");
+        Log.v("CatalogActivity", rowsDeleted + " rows deleted from inventory database");
     }
 
-    static  public Context getContext(){
+    static public Context getContext() {
         return context;
     }
 }

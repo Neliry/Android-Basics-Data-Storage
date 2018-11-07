@@ -18,7 +18,6 @@ package com.example.maria.inventory;
 import android.app.AlertDialog;
 import android.app.LoaderManager;
 import android.content.ContentValues;
-import android.content.Context;
 import android.content.CursorLoader;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -26,11 +25,8 @@ import android.content.Loader;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
-import android.provider.MediaStore;
 import android.support.v4.app.NavUtils;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Base64;
@@ -39,17 +35,14 @@ import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
-import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.example.maria.inventory.data.ProductContract;
 import com.example.maria.inventory.data.ProductContract.ProductEntry;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.text.NumberFormat;
@@ -60,7 +53,7 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
 
     private Uri mCurrentProductUri;
 
-    private static final int EXISTING_PET_LOADER = 0 ;
+    private static final int EXISTING_PRODUCT_LOADER = 0;
 
     private EditText mNameEditText;
 
@@ -76,9 +69,9 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
 
     private boolean mProductHasChanged = false;
 
-    int quantityInt=0;
+    int quantityInt = 0;
 
-    int step=1;
+    int step = 1;
 
     private static int RESULT_LOAD_IMG = 1;
 
@@ -89,17 +82,16 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_editor);
 
-        Intent intent=getIntent();
-        Uri currentPetUri = ((Intent) intent).getData();
+        Intent intent = getIntent();
+        Uri currentProductUri = ((Intent) intent).getData();
 
-        if (currentPetUri == null){
+        if (currentProductUri == null) {
             setTitle("Add a Product");
-            mCurrentProductUri =null;
-        }
-        else{
+            mCurrentProductUri = null;
+        } else {
             setTitle(getString(R.string.editor_activity_title_edit_product));
-            mCurrentProductUri =currentPetUri;
-            getLoaderManager().initLoader(EXISTING_PET_LOADER, null, this);
+            mCurrentProductUri = currentProductUri;
+            getLoaderManager().initLoader(EXISTING_PRODUCT_LOADER, null, this);
         }
 
         // Find all relevant views that we will need to read user input from
@@ -108,28 +100,28 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
         mQuantityTextView = (TextView) findViewById(R.id.edit_quantity);
         mSupplierEditText = (EditText) findViewById(R.id.edit_supplier);
         mStepEditText = (EditText) findViewById(R.id.edit_step);
-        mProductPictureImageView=(ImageView)findViewById(R.id.product_picture);
+        mProductPictureImageView = (ImageView) findViewById(R.id.product_picture);
 
         mNameEditText.setOnTouchListener(mTouchListener);
         mPriceEditText.setOnTouchListener(mTouchListener);
         mSupplierEditText.setOnTouchListener(mTouchListener);
 
-        Button plus_button=(Button)findViewById(R.id.plus_button);
-        Button minus_button=(Button)findViewById(R.id.minus_button);
+        Button plus_button = (Button) findViewById(R.id.plus_button);
+        Button minus_button = (Button) findViewById(R.id.minus_button);
 
         plus_button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                String stepString=mStepEditText.getText().toString();
-                if(stepString != null && !stepString.equals("")){
-                    step= Math.abs(Integer.parseInt(mStepEditText.getText().toString()));
+                String stepString = mStepEditText.getText().toString();
+                if (stepString != null && !stepString.equals("")) {
+                    step = Math.abs(Integer.parseInt(mStepEditText.getText().toString()));
+                } else {
+                    step = 1;
                 }
-                else {
-                    step=1;
-                }
-                if(quantityInt+step<=999999) {
-                    quantityInt+=step;
+                if (quantityInt + step <= 999999) {
+                    quantityInt += step;
                     mQuantityTextView.setText(String.valueOf(quantityInt));
+                    mProductHasChanged = true;
                 }
             }
         });
@@ -137,21 +129,21 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
         minus_button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                String stepString=mStepEditText.getText().toString();
-                if(stepString != null && !stepString.equals("")){
-                    step= Math.abs(Integer.parseInt(mStepEditText.getText().toString()));
+                String stepString = mStepEditText.getText().toString();
+                if (stepString != null && !stepString.equals("")) {
+                    step = Math.abs(Integer.parseInt(mStepEditText.getText().toString()));
+                } else {
+                    step = 1;
                 }
-                else {
-                    step=1;
-                }
-                if(quantityInt-step>=0){
-                    quantityInt-=step;
+                if (quantityInt - step >= 0) {
+                    quantityInt -= step;
                     mQuantityTextView.setText(String.valueOf(quantityInt));
+                    mProductHasChanged = true;
                 }
             }
         });
 
-        Button add_picture_button=(Button)findViewById(R.id.add_picture_button);
+        Button add_picture_button = (Button) findViewById(R.id.add_picture_button);
         add_picture_button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -161,10 +153,26 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
     }
 
 
-    private void saveProduct(){
+    private boolean saveProduct() {
 
-        String nameString=mNameEditText.getText().toString().trim();
-        int priceInt =  Integer.parseInt(mPriceEditText.getText().toString().trim());
+        if (mNameEditText.getText().toString().trim().equals("")) {
+            Toast.makeText(this, getString(R.string.empty_product_name),
+                    Toast.LENGTH_SHORT).show();
+            return false;
+        }
+        if (mPriceEditText.getText().toString().trim().equals("")) {
+            Toast.makeText(this, getString(R.string.empty_product_price),
+                    Toast.LENGTH_SHORT).show();
+            return false;
+        }
+        if (mSupplierEditText.getText().toString().trim().equals("")) {
+            Toast.makeText(this, getString(R.string.empty_product_supplier),
+                    Toast.LENGTH_SHORT).show();
+            return false;
+        }
+
+        String nameString = mNameEditText.getText().toString().trim();
+        int priceInt = Integer.parseInt(mPriceEditText.getText().toString().trim());
         String supplierString = mSupplierEditText.getText().toString().trim();
 
         ContentValues values = new ContentValues();
@@ -172,36 +180,36 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
         values.put(ProductEntry.COLUMN_PRODUCT_PRICE, priceInt);
         values.put(ProductEntry.COLUMN_QUANTITY_AVAILABLE, quantityInt);
         values.put(ProductEntry.COLUMN_PRODUCT_SUPPLIER, supplierString);
-        if(!mImageUri.equals("")){
-        values.put(ProductEntry.COLUMN_PRODUCT_PICTURE, mImageUri);
+        if (!mImageUri.equals("")) {
+            values.put(ProductEntry.COLUMN_PRODUCT_PICTURE, mImageUri);
         }
 
         if (mCurrentProductUri == null) {
-        Uri newUri = getContentResolver().insert(ProductEntry.CONTENT_URI, values);
+            Uri newUri = getContentResolver().insert(ProductEntry.CONTENT_URI, values);
 
-        if (newUri == null) {
-            // If the new content URI is null, then there was an error with insertion.
-            Toast.makeText(this, getString(R.string.editor_insert_product_failed),
-                    Toast.LENGTH_SHORT).show();
+            if (newUri == null) {
+                // If the new content URI is null, then there was an error with insertion.
+                Toast.makeText(this, getString(R.string.editor_insert_product_failed),
+                        Toast.LENGTH_SHORT).show();
+            } else {
+                // Otherwise, the insertion was successful and we can display a toast.
+                Toast.makeText(this, getString(R.string.editor_insert_product_successful),
+                        Toast.LENGTH_SHORT).show();
+            }
         } else {
-            // Otherwise, the insertion was successful and we can display a toast.
-            Toast.makeText(this, getString(R.string.editor_insert_product_successful),
-                    Toast.LENGTH_SHORT).show();
-        }
-        }
-        else{
             int rowsAffected = getContentResolver().update(mCurrentProductUri, values, null, null);
 
             if (rowsAffected == 0) {
                 // If the new content URI is null, then there was an error with insertion.
                 Toast.makeText(this, getString(R.string.editor_edit_product_failed),
                         Toast.LENGTH_SHORT).show();
-            } else if(mProductHasChanged) {
+            } else if (mProductHasChanged) {
                 // Otherwise, the insertion was successful and we can display a toast.
                 Toast.makeText(this, getString(R.string.editor_edit_product_successful),
                         Toast.LENGTH_SHORT).show();
             }
         }
+        return true;
     }
 
     public void loadImagefromGallery(View view) {
@@ -223,22 +231,22 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
                 final InputStream imageStream = getContentResolver().openInputStream(imageUri);
                 final Bitmap selectedImage = BitmapFactory.decodeStream(imageStream);
                 mProductPictureImageView.setImageBitmap(selectedImage);
-                mImageUri=BitMapToString(selectedImage);
+                mImageUri = BitMapToString(selectedImage);
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
                 Toast.makeText(EditorActivity.this, "Something went wrong", Toast.LENGTH_LONG).show();
             }
 
-        }else {
-            Toast.makeText(EditorActivity.this, "You haven't picked Image",Toast.LENGTH_LONG).show();
+        } else {
+            Toast.makeText(EditorActivity.this, "You haven't picked Image", Toast.LENGTH_LONG).show();
         }
     }
 
-    public String BitMapToString(Bitmap bitmap){
-        ByteArrayOutputStream baos=new  ByteArrayOutputStream();
-        bitmap.compress(Bitmap.CompressFormat.PNG,100, baos);
-        byte [] b=baos.toByteArray();
-        String temp=Base64.encodeToString(b, Base64.DEFAULT);
+    public String BitMapToString(Bitmap bitmap) {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.PNG, 100, baos);
+        byte[] b = baos.toByteArray();
+        String temp = Base64.encodeToString(b, Base64.DEFAULT);
         return temp;
     }
 
@@ -257,8 +265,8 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
         switch (item.getItemId()) {
             // Respond to a click on the "Save" menu option
             case R.id.action_save:
-                saveProduct();
-                finish();
+                if (saveProduct())
+                    finish();
                 return true;
             // Respond to a click on the "Delete" menu option
             case R.id.action_delete:
@@ -271,7 +279,7 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
             // Respond to a click on the "Up" arrow button in the app bar
             case android.R.id.home:
 
-                // If the pet hasn't changed, continue with navigating up to parent activity
+                // If the product hasn't changed, continue with navigating up to parent activity
                 // which is the {@link CatalogActivity}.
                 if (!mProductHasChanged) {
                     NavUtils.navigateUpFromSameTask(EditorActivity.this);
@@ -297,7 +305,6 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
     }
 
 
-
     @Override
     public Loader<Cursor> onCreateLoader(int i, Bundle bundle) {
         String[] projection = {
@@ -310,7 +317,7 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
 
         // This loader will execute the ContentProvider's query method on a background thread
         return new CursorLoader(this,   // Parent activity context
-                mCurrentProductUri,         // Query the content URI for the current pet
+                mCurrentProductUri,         // Query the content URI for the current product
                 projection,             // Columns to include in the resulting Cursor
                 null,                   // No selection clause
                 null,                   // No selection arguments
@@ -320,7 +327,7 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
         if (cursor.moveToFirst()) {
-            // Find the columns of pet attributes that we're interested in
+            // Find the columns of product attributes that we're interested in
             int nameColumnIndex = cursor.getColumnIndex(ProductEntry.COLUMN_PRODUCT_NAME);
             int priceColumnIndex = cursor.getColumnIndex(ProductEntry.COLUMN_PRODUCT_PRICE);
             int quantityColumnIndex = cursor.getColumnIndex(ProductEntry.COLUMN_QUANTITY_AVAILABLE);
@@ -332,7 +339,7 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
             int price = cursor.getInt(priceColumnIndex);
             int quantity = cursor.getInt(quantityColumnIndex);
             String supplier = cursor.getString(supplierColumnIndex);
-            String productImage=cursor.getString(imageColumnIndex);
+            String productImage = cursor.getString(imageColumnIndex);
 
             // Update the views on the screen with the values from the database
             mNameEditText.setText(name);
@@ -340,7 +347,7 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
             mQuantityTextView.setText(Integer.toString(quantity));
             mSupplierEditText.setText(supplier);
             mProductPictureImageView.setImageBitmap(StringToBitMap(productImage));
-            quantityInt=quantity;
+            quantityInt = quantity;
         }
     }
 
@@ -359,7 +366,7 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
 
     @Override
     public void onBackPressed() {
-        // If the pet hasn't changed, continue with handling back button press
+        // If the product hasn't changed, continue with handling back button press
         if (!mProductHasChanged) {
             super.onBackPressed();
             return;
@@ -388,7 +395,7 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
         builder.setNegativeButton(R.string.keep_editing, new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int id) {
                 // User clicked the "Keep editing" button, so dismiss the dialog
-                // and continue editing the pet.
+                // and continue editing the product.
                 if (dialog != null) {
                     dialog.dismiss();
                 }
@@ -406,14 +413,14 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
         builder.setMessage(R.string.delete_dialog_msg);
         builder.setPositiveButton(R.string.delete, new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int id) {
-                // User clicked the "Delete" button, so delete the pet.
+                // User clicked the "Delete" button, so delete the product.
                 deleteProduct();
             }
         });
         builder.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int id) {
                 // User clicked the "Cancel" button, so dismiss the dialog
-                // and continue editing the pet.
+                // and continue editing the product.
                 if (dialog != null) {
                     dialog.dismiss();
                 }
@@ -444,29 +451,29 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
     }
 
     public void submitOrder() {
-        String nameString=mNameEditText.getText().toString().trim();
-        int priceInt =  Integer.parseInt(mPriceEditText.getText().toString().trim());
+        String nameString = mNameEditText.getText().toString().trim();
+        int priceInt = Integer.parseInt(mPriceEditText.getText().toString().trim());
         String supplierString = mSupplierEditText.getText().toString().trim();
-        String message= "Product: "+ nameString +
-                "\n" + "Price: "  + NumberFormat.getCurrencyInstance(Locale.getDefault()).format(priceInt)+
-                "\n"+ "Quantity: " + String.valueOf(quantityInt) +
-                "\n"+ "Supplier: " + supplierString ;
-        String subject=getString(R.string.order_summary_email_subject)+" "+supplierString ;
+        String message = "Product: " + nameString +
+                "\n" + "Price: " + NumberFormat.getCurrencyInstance(Locale.getDefault()).format(priceInt) +
+                "\n" + "Quantity: " + String.valueOf(quantityInt) +
+                "\n" + "Supplier: " + supplierString;
+        String subject = getString(R.string.order_summary_email_subject) + " " + supplierString;
         Intent intent = new Intent(Intent.ACTION_SENDTO);
         intent.setData(Uri.parse("mailto:"));
         intent.putExtra(Intent.EXTRA_TEXT, message);
         intent.putExtra(Intent.EXTRA_SUBJECT, subject);
-        if(intent.resolveActivity(getPackageManager())!=null){
+        if (intent.resolveActivity(getPackageManager()) != null) {
             startActivity(intent);
         }
     }
 
-    public Bitmap StringToBitMap(String encodedString){
+    public Bitmap StringToBitMap(String encodedString) {
         try {
-            byte [] encodeByte=Base64.decode(encodedString,Base64.DEFAULT);
-            Bitmap bitmap=BitmapFactory.decodeByteArray(encodeByte, 0, encodeByte.length);
+            byte[] encodeByte = Base64.decode(encodedString, Base64.DEFAULT);
+            Bitmap bitmap = BitmapFactory.decodeByteArray(encodeByte, 0, encodeByte.length);
             return bitmap;
-        } catch(Exception e) {
+        } catch (Exception e) {
             e.getMessage();
             return null;
         }

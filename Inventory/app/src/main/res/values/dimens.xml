@@ -1,4 +1,3 @@
-
 <resources>
     <!-- Margin around the floating action button in CatalogActivity -->
     <dimen name="fab_margin">16dp</dimen>

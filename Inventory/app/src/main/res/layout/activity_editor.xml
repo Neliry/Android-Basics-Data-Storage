@@ -91,7 +91,8 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:inputType="textCapWords"
-                            android:text="0" />
+                            android:text="0"
+                            android:textSize="18sp" />
 
                         <Button
                             android:id="@+id/plus_button"
@@ -122,11 +123,11 @@
                 android:layout_height="wrap_content"
                 android:adjustViewBounds="true" />
 
-<Button
-    android:id="@+id/add_picture_button"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:text="Add picture"/>
+            <Button
+                android:id="@+id/add_picture_button"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Add picture" />
         </LinearLayout>
     </ScrollView>
 </RelativeLayout>

@@ -1,0 +1,59 @@
+<resources>
+    <string name="app_name">Inventory</string>
+
+    <string name="empty_view_title_text">No products in the inventory.</string>
+
+    <string name="action_save">Save</string>
+
+    <string name="action_order">Order</string>
+
+    <string name="action_delete">Delete</string>
+
+    <string name="action_delete_all_entries">Delete All Products</string>
+
+    <string name="editor_activity_title_edit_product">Edit Product</string>
+
+    <string name="editor_insert_product_successful">Product saved</string>
+
+    <string name="editor_insert_product_failed">Error with saving product</string>
+
+    <string name="editor_edit_product_successful">Product has been successfully edited</string>
+
+    <string name="editor_edit_product_failed">Error with editing product</string>
+
+    <string name="category_name">Name</string>
+
+    <string name="category_price">Price</string>
+
+    <string name="category_quantity">Quantity</string>
+
+    <string name="category_supplier">Supplier</string>
+
+    <string name="hint_product_name">Product Name</string>
+
+    <string name="hint_product_price">Product Price</string>
+
+    <string name="hint_quantity_available">Quantity available</string>
+
+    <string name="hint_supplier">Product supplier</string>
+
+    <string name="hint_step">Step</string>
+
+    <string name="unsaved_changes_dialog_msg">Discard your changes and quit editing?</string>
+
+    <string name="discard">Discard</string>
+
+    <string name="keep_editing">Keep Editing</string>
+
+    <string name="editor_delete_product_successful">Product deleted</string>
+
+    <string name="editor_delete_product_failed">Error with deleting product</string>
+
+    <string name="delete_dialog_msg">Delete this product?</string>
+
+    <string name="delete">Delete</string>
+
+    <string name="cancel">Cancel</string>
+
+    <string name="order_summary_email_subject">Product order for </string>
+</resources>
